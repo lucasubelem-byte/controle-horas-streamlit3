@@ -30,38 +30,48 @@ def adicionar_horas(nome):
     if senha == usuarios[nome]["senha"]:
         dia = st.date_input("Escolha o dia da falta", key=f"data_add_{nome}")
         dia_str = dia.strftime("%d/%m/%Y")
-        if dia_str not in usuarios[nome]["faltas"]:
-            valor = 5 if dia.weekday() < 5 else 4
-            usuarios[nome]["horas"].append(valor)
-            usuarios[nome]["faltas"].append(dia_str)
-            st.success(f"{valor} horas adicionadas em {dia_str}")
-        else:
-            st.warning("Essa data já foi registrada.")
+        if st.button("Confirmar adição", key=f"btn_add_{nome}"):
+            if dia_str not in usuarios[nome]["faltas"]:
+                valor = 5 if dia.weekday() < 5 else 4
+                usuarios[nome]["horas"].append(valor)
+                usuarios[nome]["faltas"].append(dia_str)
+                st.success(f"{valor} horas adicionadas em {dia_str}")
+            else:
+                st.warning("Essa data já foi registrada.")
     elif senha:
         st.error("Senha incorreta!")
 
-def remover_horas(nome):
-    st.subheader(f"Remover horas - {nome}")
-    senha = st.text_input("Senha:", type="password", key=f"rem_{nome}")
-    if senha == usuarios[nome]["senha"]:
-        qtd = st.number_input("Quantas horas deseja remover?", min_value=1, key=f"qtd_rem_{nome}")
-        if st.button("Remover", key=f"btn_rem_{nome}"):
-            total_horas = sum(usuarios[nome]["horas"])
-            if qtd <= total_horas:
-                horas_restantes = qtd
-                while horas_restantes > 0 and usuarios[nome]["horas"]:
-                    if usuarios[nome]["horas"][-1] <= horas_restantes:
-                        horas_restantes -= usuarios[nome]["horas"][-1]
-                        usuarios[nome]["horas"].pop()
-                        usuarios[nome]["faltas"].pop()
-                    else:
-                        usuarios[nome]["horas"][-1] -= horas_restantes
-                        horas_restantes = 0
-                st.success(f"{qtd} horas removidas de {nome}")
-            else:
-                st.error("Não há horas suficientes para remover.")
+def remover_horas_admin():
+    st.subheader("🔒 Remover horas (Admin)")
+    senha = st.text_input("Senha mestra:", type="password", key="senha_rem_admin")
+    if senha == senha_mestra:
+        nome = st.selectbox("Escolha o usuário:", list(usuarios.keys()))
+        if usuarios[nome]["horas"]:
+            qtd = st.number_input(
+                "Quantas horas deseja remover?",
+                min_value=1,
+                max_value=sum(usuarios[nome]["horas"]),
+                key=f"qtd_rem_admin_{nome}"
+            )
+            if st.button("Remover horas", key=f"btn_rem_admin_{nome}"):
+                total_horas = sum(usuarios[nome]["horas"])
+                if qtd <= total_horas:
+                    horas_restantes = qtd
+                    while horas_restantes > 0 and usuarios[nome]["horas"]:
+                        if usuarios[nome]["horas"][-1] <= horas_restantes:
+                            horas_restantes -= usuarios[nome]["horas"][-1]
+                            usuarios[nome]["horas"].pop()
+                            usuarios[nome]["faltas"].pop()
+                        else:
+                            usuarios[nome]["horas"][-1] -= horas_restantes
+                            horas_restantes = 0
+                    st.success(f"{qtd} horas removidas de {nome}")
+                else:
+                    st.error("Não há horas suficientes para remover.")
+        else:
+            st.warning("Esse usuário não possui horas a remover.")
     elif senha:
-        st.error("Senha incorreta!")
+        st.error("Senha mestra incorreta!")
 
 def ver_horas():
     st.subheader("📊 Horas devidas")
@@ -75,7 +85,7 @@ def ver_horas():
 
 def admin_panel():
     st.subheader("🔒 Painel Admin")
-    senha = st.text_input("Senha mestra:", type="password", key="senha_mestra")
+    senha = st.text_input("Senha mestra:", type="password", key="senha_admin")
     if senha == senha_mestra:
         op = st.selectbox("Escolha a operação:", ["Adicionar usuário", "Remover usuário", "Alterar senha"])
         
@@ -107,15 +117,17 @@ def admin_panel():
 # ===== Interface Principal =====
 st.title("⏱ Controle de Horas Devidas")
 
-acao = st.radio("Escolha uma ação:", ["Adicionar horas", "Remover horas", "Ver horas", "Admin"])
+acao = st.radio("Escolha uma ação:", ["Adicionar horas", "Remover horas (Admin)", "Ver horas", "Admin"])
 
-if acao in ["Adicionar horas", "Remover horas"]:
+if acao == "Adicionar horas":
     nome = st.selectbox("Escolha seu nome:", list(usuarios.keys()))
-    if acao == "Adicionar horas":
-        adicionar_horas(nome)
-    else:
-        remover_horas(nome)
+    adicionar_horas(nome)
+
+elif acao == "Remover horas (Admin)":
+    remover_horas_admin()
+
 elif acao == "Ver horas":
     ver_horas()
+
 else:
     admin_panel()
