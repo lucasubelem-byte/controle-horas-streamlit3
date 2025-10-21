@@ -3,20 +3,25 @@ from datetime import datetime
 
 st.set_page_config(page_title="Controle de Horas", layout="wide")
 
-# ===== Dados iniciais =====
+# ===== Senha mestra =====
 senha_mestra = "1b1m"
-usuarios = {
-    "Lucas Uva": {"senha": "lu123", "horas": [], "faltas": []},
-    "Luis": {"senha": "lu1", "horas": [], "faltas": []},
-    "Matheus": {"senha": "ma123", "horas": [], "faltas": []},
-    "Raphaela": {"senha": "ra123", "horas": [], "faltas": []},
-    "Ralf": {"senha": "ra1", "horas": [], "faltas": []},
-    "Julia": {"senha": "ju1", "horas": [], "faltas": []},
-    "Withyna": {"senha": "wi1", "horas": [], "faltas": []},
-    "Melissa": {"senha": "me1", "horas": [], "faltas": []},
-    "Ana": {"senha": "an1", "horas": [], "faltas": []},
-    "Leandro": {"senha": "le1", "horas": [], "faltas": []},
-}
+
+# ===== Inicializa session_state =====
+if "usuarios" not in st.session_state:
+    st.session_state.usuarios = {
+        "Lucas Uva": {"senha": "lu123", "horas": [], "faltas": []},
+        "Luis": {"senha": "lu1", "horas": [], "faltas": []},
+        "Matheus": {"senha": "ma123", "horas": [], "faltas": []},
+        "Raphaela": {"senha": "ra123", "horas": [], "faltas": []},
+        "Ralf": {"senha": "ra1", "horas": [], "faltas": []},
+        "Julia": {"senha": "ju1", "horas": [], "faltas": []},
+        "Withyna": {"senha": "wi1", "horas": [], "faltas": []},
+        "Melissa": {"senha": "me1", "horas": [], "faltas": []},
+        "Ana": {"senha": "an1", "horas": [], "faltas": []},
+        "Leandro": {"senha": "le1", "horas": [], "faltas": []},
+    }
+
+usuarios = st.session_state.usuarios  # usar session_state
 
 # ===== Funções =====
 def adicionar_horas(nome):
@@ -73,6 +78,7 @@ def admin_panel():
     senha = st.text_input("Senha mestra:", type="password", key="senha_mestra")
     if senha == senha_mestra:
         op = st.selectbox("Escolha a operação:", ["Adicionar usuário", "Remover usuário", "Alterar senha"])
+        
         if op == "Adicionar usuário":
             nome_novo = st.text_input("Nome do novo usuário")
             senha_inicial = st.text_input("Senha inicial")
@@ -82,11 +88,13 @@ def admin_panel():
                     st.success(f"Usuário {nome_novo} adicionado!")
                 else:
                     st.error("Usuário já existe.")
+
         elif op == "Remover usuário":
             nome_remover = st.selectbox("Escolha o usuário para remover:", list(usuarios.keys()))
             if st.button("Remover"):
                 usuarios.pop(nome_remover)
                 st.success(f"Usuário {nome_remover} removido!")
+
         elif op == "Alterar senha":
             nome_alt = st.selectbox("Escolha o usuário para alterar senha:", list(usuarios.keys()))
             nova_senha = st.text_input("Nova senha")
