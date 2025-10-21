@@ -1,14 +1,22 @@
 import streamlit as st
 from datetime import datetime
+import json
+import os
 
 st.set_page_config(page_title="Controle de Horas", layout="wide")
 
 # ===== Senha mestra =====
 senha_mestra = "1b1m"
 
-# ===== Inicializa session_state =====
-if "usuarios" not in st.session_state:
-    st.session_state.usuarios = {
+# ===== Arquivo JSON =====
+ARQUIVO_DADOS = "dados.json"
+
+# Carregar dados do JSON
+if os.path.exists(ARQUIVO_DADOS):
+    with open(ARQUIVO_DADOS, "r") as f:
+        usuarios = json.load(f)
+else:
+    usuarios = {
         "Lucas Uva": {"senha": "lu123", "horas": [], "faltas": []},
         "Luis": {"senha": "lu1", "horas": [], "faltas": []},
         "Matheus": {"senha": "ma123", "horas": [], "faltas": []},
@@ -21,7 +29,10 @@ if "usuarios" not in st.session_state:
         "Leandro": {"senha": "le1", "horas": [], "faltas": []},
     }
 
-usuarios = st.session_state.usuarios  # usar session_state
+# Função para salvar JSON
+def salvar_dados():
+    with open(ARQUIVO_DADOS, "w") as f:
+        json.dump(usuarios, f, indent=4)
 
 # ===== Funções =====
 def adicionar_horas(nome):
@@ -35,6 +46,7 @@ def adicionar_horas(nome):
                 valor = 5 if dia.weekday() < 5 else 4
                 usuarios[nome]["horas"].append(valor)
                 usuarios[nome]["faltas"].append(dia_str)
+                salvar_dados()
                 st.success(f"{valor} horas adicionadas em {dia_str}")
             else:
                 st.warning("Essa data já foi registrada.")
@@ -65,6 +77,7 @@ def remover_horas_admin():
                         else:
                             usuarios[nome]["horas"][-1] -= horas_restantes
                             horas_restantes = 0
+                    salvar_dados()
                     st.success(f"{qtd} horas removidas de {nome}")
                 else:
                     st.error("Não há horas suficientes para remover.")
@@ -95,6 +108,7 @@ def admin_panel():
             if st.button("Adicionar"):
                 if nome_novo not in usuarios:
                     usuarios[nome_novo] = {"senha": senha_inicial, "horas": [], "faltas": []}
+                    salvar_dados()
                     st.success(f"Usuário {nome_novo} adicionado!")
                 else:
                     st.error("Usuário já existe.")
@@ -103,6 +117,7 @@ def admin_panel():
             nome_remover = st.selectbox("Escolha o usuário para remover:", list(usuarios.keys()))
             if st.button("Remover"):
                 usuarios.pop(nome_remover)
+                salvar_dados()
                 st.success(f"Usuário {nome_remover} removido!")
 
         elif op == "Alterar senha":
@@ -110,6 +125,7 @@ def admin_panel():
             nova_senha = st.text_input("Nova senha")
             if st.button("Alterar"):
                 usuarios[nome_alt]["senha"] = nova_senha
+                salvar_dados()
                 st.success(f"Senha de {nome_alt} alterada!")
     elif senha:
         st.error("Senha mestra incorreta!")
